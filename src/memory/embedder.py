@@ -12,10 +12,10 @@ import numpy as np
 
 def _make_embedding_fn():
     if os.getenv("INFERENCE_BACKEND") == "groq":
-        from langchain_community.embeddings import HuggingFaceEmbeddings
+        from langchain_huggingface import HuggingFaceEmbeddings
         return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     else:
-        from langchain_community.embeddings import OllamaEmbeddings
+        from langchain_ollama import OllamaEmbeddings
         return OllamaEmbeddings(
             model=os.getenv("OLLAMA_MODEL", "llama3.1"),
             base_url="http://host.docker.internal:11434",
