@@ -1,0 +1,39 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+
+# Raw training data
+data/raw/
+
+# Large processed files (training only, not needed at inference)
+data/processed/movies.csv
+data/processed/food.csv
+data/processed/books.csv
+data/processed/*.pkl
+data/processed/*.png
+data/processed/train.csv
+data/processed/test.csv
+data/processed/movies_with_genres.csv
+
+# Lookup CSVs — uploaded manually via HF Spaces web UI
+data/processed/movie_lookup.csv
+data/processed/food_lookup.csv
+data/processed/book_lookup.csv
+
+# Large model checkpoint — stored on HF Hub, downloaded at runtime
+mf_best.pt
+
+# FAISS memory (ephemeral, regenerated at runtime)
+data/memory/
+
+# Docker (not used on HF Spaces)
+docker-compose.yml
+Dockerfile
+
+# Dev tools
+notebooks/
+scripts/
