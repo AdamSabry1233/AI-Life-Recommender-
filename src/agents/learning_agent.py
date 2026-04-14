@@ -43,7 +43,7 @@ def make_node(rec: MultiDomainRecommender, llm):
     def learning_agent(state: AgentState) -> dict:
         # Fetch extra candidates and shuffle the tail so the LLM sees variety.
         # The top-3 stay fixed (best MF matches), the rest are shuffled.
-        candidates = rec.get_top_n(DOMAIN_BOOKS, state["user_local_idx"], n=20)
+        candidates = rec.get_top_n(DOMAIN_BOOKS, state["user_local_idx"], n=30)
         top, tail  = candidates[:3], candidates[3:]
         random.shuffle(tail)
         candidates = (top + tail)[:10]

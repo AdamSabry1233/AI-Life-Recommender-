@@ -56,7 +56,7 @@ def make_llm(ollama_model: str = "llama3.1"):
     if os.getenv("INFERENCE_BACKEND") == "groq":
         from langchain_groq import ChatGroq
         return ChatGroq(
-            model="llama-3.1-8b-instant",
+            model="llama3-8b-8192",
             api_key=os.getenv("GROQ_API_KEY"),
             temperature=0.3,
         )

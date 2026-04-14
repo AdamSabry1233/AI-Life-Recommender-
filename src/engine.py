@@ -54,17 +54,17 @@ using the current recommendations and conversation history as context.\
 # ── onboarding questions ──────────────────────────────────────────────────────
 
 ONBOARDING_QUESTIONS = [
-    "👋 Welcome! I'd love to personalise your recommendations.\n\n"
-    "What movie or TV genres do you enjoy most? "
+    "👋 Welcome! Before I make recommendations, I have 4 quick questions to personalise them for you.\n\n"
+    "**Step 1 of 4** — What movie or TV genres do you enjoy most? "
     "(e.g. action, comedy, drama, sci-fi, romance, documentary)",
 
-    "Do you have any dietary preferences or restrictions? "
+    "**Step 2 of 4** — Do you have any dietary preferences or restrictions? "
     "(e.g. vegetarian, vegan, halal, gluten-free — or just say 'no restrictions')",
 
-    "Do you prefer fiction or non-fiction books? "
+    "**Step 3 of 4** — Do you prefer fiction or non-fiction books? "
     "Any topics or authors you love?",
 
-    "Last one — what does your ideal evening look like when you want to unwind?",
+    "**Step 4 of 4 (last one!)** — What does your ideal evening look like when you want to unwind?",
 ]
 
 # ── session ───────────────────────────────────────────────────────────────────
@@ -223,12 +223,25 @@ class ChatEngine:
             label        = self._LABEL[domain]
             current_name = (session.current_state.get(state_key) or {}).get("name", "")
 
-            candidates = self.rec.get_top_n(domain_id, 0, n=20)
-            filtered   = [c for c in candidates if c["name"] != current_name][:10]
+            import random as _random
+            candidates = self.rec.get_top_n(domain_id, 0, n=40)
+            top, tail  = candidates[:3], candidates[3:]
+            _random.shuffle(tail)
+            candidates = (top + tail)
+            filtered   = [c for c in candidates if c["name"] != current_name][:15]
 
+            s = session.current_state
+            current_recs = (
+                f"Current recommendations (DO NOT repeat these):\n"
+                f"  Movie: {(s.get('movie_rec') or {}).get('name', '?')}\n"
+                f"  Food:  {(s.get('food_rec')  or {}).get('name', '?')}\n"
+                f"  Book:  {(s.get('book_rec')  or {}).get('name', '?')}\n"
+                f"  Habit: {(s.get('habit_rec') or {}).get('habit', '?')}\n"
+            )
             prompt = (
                 f"User intent: {session.current_state['intent']}\n"
                 f"User refinement: {message}\n\n"
+                f"{current_recs}\n"
                 f"Do NOT suggest '{current_name}' — pick a different option.\n\n"
                 f"{label} candidates:\n{format_candidates(filtered)}\n\n"
                 f"Respond on ONE line: {label}: <name> — <one-sentence reason>"

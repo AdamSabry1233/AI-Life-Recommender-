@@ -5,6 +5,7 @@ Gets top-N recipe candidates from the MF model, then uses the LLM to pick
 the single best fit for the user's current intent.
 """
 
+import random
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -39,7 +40,10 @@ def make_node(rec: MultiDomainRecommender, llm):
     chain = prompt | llm | StrOutputParser()
 
     def food_agent(state: AgentState) -> dict:
-        candidates = rec.get_top_n(DOMAIN_FOOD, state["user_local_idx"], n=10)
+        candidates = rec.get_top_n(DOMAIN_FOOD, state["user_local_idx"], n=30)
+        top, tail  = candidates[:3], candidates[3:]
+        random.shuffle(tail)
+        candidates = (top + tail)[:10]
         prefs = state.get("user_preferences") or ""
         raw = chain.invoke({
             "intent":     state["intent"],

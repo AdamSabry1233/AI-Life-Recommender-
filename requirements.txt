@@ -24,7 +24,10 @@ faiss-cpu>=1.9.0
 # === Agent / Graph ===
 langgraph>=0.2.0
 
+# === Persistent Storage ===
+upstash-redis>=1.0.0
+
 # === UI ===
-gradio==4.37.1
+# gradio version is controlled by sdk_version in README.md
 huggingface_hub>=0.23.4
 pydantic>=2.7.0
