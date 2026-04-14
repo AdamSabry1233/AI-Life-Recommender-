@@ -218,6 +218,3 @@ UPSTASH_REDIS_REST_TOKEN=<your token>
 
 ---
 
-## Author
-
-Adam Sabry — built as a portfolio project targeting ML infrastructure engineering roles.
