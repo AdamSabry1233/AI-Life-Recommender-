@@ -37,3 +37,8 @@ Dockerfile
 # Dev tools
 notebooks/
 scripts/
+
+# Test / eval artifacts (regenerated on demand)
+.pytest_cache/
+results/
+src/CornacExp-*.log
