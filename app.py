@@ -38,6 +38,12 @@ print(f"Checkpoint ready at: {checkpoint_path}")
 from engine import ChatEngine, ChatSession
 from user_store import load_profile, save_profile
 
+# ── augmentation feature flags ────────────────────────────────────────────────
+from semantic import live as s1_live
+from clusters import live as s2_live
+print(f"[features] semantic retrieval (S1): {'ON' if s1_live.enabled() else 'off'}")
+print(f"[features] cluster conditioning (S2): {'ON' if s2_live.enabled() else 'off'}")
+
 print("Loading ChatEngine …")
 engine = ChatEngine(
     checkpoint_path=checkpoint_path,

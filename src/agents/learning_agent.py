@@ -12,6 +12,8 @@ from langchain_core.output_parsers import StrOutputParser
 from agents.state import AgentState
 from recommender import MultiDomainRecommender, DOMAIN_BOOKS
 from llm_chain import format_candidates
+from semantic import live as s1_live
+from clusters import live as s2_live
 
 _SYSTEM = """\
 You are the Learning Agent in an AI Life Recommender system.
@@ -41,15 +43,20 @@ def make_node(rec: MultiDomainRecommender, llm):
     chain = prompt | llm | StrOutputParser()
 
     def learning_agent(state: AgentState) -> dict:
-        # Fetch extra candidates and shuffle the tail so the LLM sees variety.
-        # The top-3 stay fixed (best MF matches), the rest are shuffled.
         candidates = rec.get_top_n(DOMAIN_BOOKS, state["user_local_idx"], n=30)
+        prefs = state.get("user_preferences") or ""
+        intent = state["intent"]
+        memory = state.get("memory_context") or ""
+        if s1_live.enabled():
+            query = " ".join(s for s in (intent, prefs, memory) if s).strip()
+            candidates = s1_live.augment(candidates, query)
+        if s2_live.enabled():
+            candidates, _ = s2_live.condition(candidates, prefs, intent)
         top, tail  = candidates[:3], candidates[3:]
         random.shuffle(tail)
         candidates = (top + tail)[:10]
-        prefs = state.get("user_preferences") or ""
         raw = chain.invoke({
-            "intent":     state["intent"],
+            "intent":     intent,
             "user_prefs": f"User preferences: {prefs}\n" if prefs else "",
             "candidates": format_candidates(candidates),
         })
