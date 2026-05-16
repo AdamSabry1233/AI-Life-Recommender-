@@ -15,6 +15,9 @@ short_description: Multi-domain AI life recommender — movies, food & books
 
 A multi-agent AI system that recommends a **movie**, **meal**, **book**, and **daily habit** tailored to how you're feeling. Built end-to-end across 8 phases — from raw data processing and model training through a full LangGraph multi-agent pipeline, persistent memory, and cloud deployment.
 
+**Team:** Adam Sabry · Rammy Baroudi · Stephen Taylor
+**Course:** CMPE 256 — Recommender Systems — San José State University
+
 ---
 
 ## Live Demo
@@ -78,6 +81,150 @@ Each agent:
 
 ---
 
+## Datasets
+
+All datasets are too large for GitHub. Download them from the links below and place them under `data/raw/` before running preprocessing.
+
+| Domain | Source | Size | Download |
+|---|---|---|---|
+| Movies | MovieLens 25M | ~25M ratings, 62K movies | [grouplens.org/datasets/movielens/25m](https://grouplens.org/datasets/movielens/25m/) |
+| Food | Food.com Recipes & Interactions | ~1M interactions | [Kaggle — Food.com Recipes](https://www.kaggle.com/datasets/shuyangli94/food-com-recipes-and-user-interactions) |
+| Books | Amazon Books Reviews | ~3M ratings | [Kaggle — Amazon Books](https://www.kaggle.com/datasets/mohamedbakhet/amazon-books-reviews) |
+
+Expected directory structure after download:
+```
+data/
+└── raw/
+    ├── ml-25m/
+    │   └── ratings.csv
+    ├── food_recipes/
+    │   └── RAW_interactions.csv
+    └── amazon_books/
+        └── Books_rating.csv
+```
+
+The MF model checkpoint (`mf_best.pt`, 1.5GB) is hosted separately on HF Hub and downloaded automatically at startup:
+[asabry1233/ai-recommender-mf](https://huggingface.co/asabry1233/ai-recommender-mf)
+
+---
+
+## How to Run
+
+### Option A — Docker (Recommended)
+
+**Requirements:** Docker, Docker Compose, Ollama
+
+**Step 1 — Clone the repo:**
+```bash
+git clone https://github.com/AdamSabry1233/AI-Life-Recommender-.git
+cd AI-Life-Recommender-
+```
+
+**Step 2 — Pull Llama 3.1 via Ollama:**
+```bash
+ollama pull llama3.1
+```
+
+**Step 3 — Set environment variables:**
+
+Create a `.env` file in the project root:
+```
+OLLAMA_MODEL=llama3.1
+INFERENCE_BACKEND=
+```
+
+**Step 4 — Download datasets** (see Datasets section above) and place under `data/raw/`
+
+**Step 5 — Run preprocessing to generate lookup CSVs:**
+```bash
+docker-compose run dev python preprocess.py --raw data/raw --out data/processed --no-plots
+```
+
+**Step 6 — Start the full stack:**
+```bash
+docker-compose up api ui
+```
+
+**Step 7 — Open the UI:**
+```
+http://localhost:7860
+```
+
+**Terminal chat interface (optional):**
+```bash
+docker-compose exec dev python src/chat.py
+```
+
+**Run the graph directly (optional):**
+```bash
+docker-compose exec dev python src/graph.py --intent "I want to relax but be productive"
+```
+
+---
+
+### Option B — Local Python (No Docker)
+
+**Requirements:** Python 3.11+, Ollama
+
+**Step 1 — Clone the repo:**
+```bash
+git clone https://github.com/AdamSabry1233/AI-Life-Recommender-.git
+cd AI-Life-Recommender-
+```
+
+**Step 2 — Create and activate a virtual environment:**
+```bash
+python -m venv venv
+source venv/bin/activate        # Mac/Linux
+venv\Scripts\activate           # Windows
+```
+
+**Step 3 — Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**Step 4 — Pull Llama 3.1 via Ollama:**
+```bash
+ollama pull llama3.1
+ollama serve
+```
+
+**Step 5 — Download datasets** (see Datasets section above) and place under `data/raw/`
+
+**Step 6 — Run preprocessing:**
+```bash
+python preprocess.py --raw data/raw --out data/processed --no-plots
+```
+
+**Step 7 — Run the terminal chat:**
+```bash
+python src/chat.py
+```
+
+**Or run the graph directly:**
+```bash
+python src/graph.py --intent "I want to relax but be productive"
+```
+
+---
+
+### Train the MF Model (Optional)
+
+If you want to retrain instead of using the hosted checkpoint:
+
+```bash
+python train_mf.py \
+  --data data/processed/movies.csv data/processed/food.csv data/processed/books.csv \
+  --domain 0 1 2 \
+  --epochs 20 \
+  --batch 4096
+```
+
+The best checkpoint saves automatically to `checkpoints/mf_best.pt`.
+
+---
+
 ## Matrix Factorization Model
 
 A custom multi-domain MF model trained jointly across three domains — movies, food, and books — using a shared user embedding space with domain-aware context vectors.
@@ -87,11 +234,6 @@ A custom multi-domain MF model trained jointly across three domains — movies, 
 score(user, item, domain) = (user_emb + domain_emb) · item_emb
                            + user_bias + item_bias + global_bias
 ```
-
-**Datasets:**
-- Movies: MovieLens 25M (~25M ratings, 62K movies)
-- Food: Food.com Recipes & Interactions (~1M interactions)
-- Books: Amazon Books (~3M ratings)
 
 **Training:**
 - Optimizer: Adam with learning rate scheduling
@@ -152,8 +294,11 @@ User profiles are stored in Upstash Redis keyed by a browser-generated UUID (`gr
 ```
 AI_Recomennder/
 ├── app.py                      # HF Spaces entry point (Gradio + direct engine)
+├── preprocess.py               # Multi-domain preprocessing script
+├── train_mf.py                 # PyTorch MF training script
 ├── requirements.txt
 ├── data/
+│   ├── raw/                    # Raw datasets (not committed — see Datasets section)
 │   └── processed/
 │       ├── movie_lookup.csv    # item_idx → title, genre
 │       ├── food_lookup.csv     # item_idx → name, tags
@@ -181,32 +326,9 @@ AI_Recomennder/
 
 ---
 
-## Local Development
-
-**Requirements:** Docker, Docker Compose, Ollama with `llama3.1` pulled
-
-```bash
-# Start the full stack
-docker-compose up api ui
-
-# Terminal chat interface
-docker-compose exec dev python src/chat.py
-
-# Run the graph directly
-docker-compose exec dev python src/graph.py --intent "I want to relax but be productive"
-```
-
-**Environment variables (local):**
-```
-OLLAMA_MODEL=llama3.1
-INFERENCE_BACKEND=         # leave blank for Ollama
-```
-
----
-
 ## HF Spaces Deployment
 
-**Environment variables (HF Space settings):**
+**Environment variables (set in HF Space settings):**
 ```
 INFERENCE_BACKEND=groq
 GROQ_API_KEY=<your key>
@@ -215,6 +337,3 @@ UPSTASH_REDIS_REST_TOKEN=<your token>
 ```
 
 `mf_best.pt` is hosted on [asabry1233/ai-recommender-mf](https://huggingface.co/asabry1233/ai-recommender-mf) and downloaded automatically at startup via `hf_hub_download`.
-
----
-
