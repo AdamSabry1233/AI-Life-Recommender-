@@ -42,3 +42,6 @@ scripts/
 .pytest_cache/
 results/
 src/CornacExp-*.log
+
+# Submission artifacts — generated locally for Canvas upload, not for the repo
+submission/
