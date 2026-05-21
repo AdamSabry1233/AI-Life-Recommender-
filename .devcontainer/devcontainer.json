@@ -19,5 +19,5 @@
     }
   },
   "forwardPorts": [8888, 8000, 7860],
-  "postCreateCommand": "echo 'Container ready. Run: jupyter lab OR claude'"
+  "postCreateCommand": "echo 'Container ready. Run: jupyter lab'"
 }
